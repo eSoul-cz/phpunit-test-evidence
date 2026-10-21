@@ -51,7 +51,9 @@ final class MarkdownRendererTest extends TestCase
 
     public function test_baseline_reason_names_the_first_missing_and_unexpected_lines_of_a_structured_diff(): void
     {
-        $arrayDiff = "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n     0 => '1 GET /product 200 succeeded',\n-    1 => '2 POST /assign-hub-spot-id 204 succeeded',\n ]";
+        // As recorded by earlier versions: the description's diff followed by the same diff again.
+        $diff = "--- Expected\n+++ Actual\n@@ @@\n     0 => '1 GET /product 200 succeeded',\n-    1 => '2 POST /assign-hub-spot-id 204 succeeded',\n ]";
+        $arrayDiff = "Failed asserting that two arrays are identical.\n" . $diff . "\n" . $diff;
         $replacedDiff = "Failed asserting that two strings are identical.\n--- Expected\n+++ Actual\n@@ @@\n first\n-second\n+other\n";
         $scalarDiff = "Failed asserting that -1 is identical to 3.\n--- Expected\n+++ Actual\n@@ @@\n-3\n+-1";
         $current = new RunResult('8.5.0', '12.5.0', [

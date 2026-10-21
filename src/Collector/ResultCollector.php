@@ -64,7 +64,9 @@ final class ResultCollector
 
     public function failed(Test $test, Throwable $throwable, ?string $diff): void
     {
-        $details = trim($throwable->description() . ($diff !== null && $diff !== '' ? "\n" . $diff : ''));
+        $description = $throwable->description();
+        // PHPUnit usually includes the comparison diff in the description already.
+        $details = trim($diff !== null && $diff !== '' && !str_contains($description, trim($diff)) ? $description . "\n" . $diff : $description);
 
         $this->outcome($test, TestOutcome::Failed, $throwable->message(), $details);
     }

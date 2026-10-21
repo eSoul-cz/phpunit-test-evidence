@@ -141,7 +141,7 @@ final class TestEvidenceCommandTest extends TestCase
         [$exitCode, $markdown] = $this->runCommand(['broken']);
 
         self::assertSame(1, $exitCode);
-        self::assertStringContainsString('| Result | **0 of 3 tests passed**', $markdown);
+        self::assertStringContainsString('| Result | **0 of 4 tests passed**', $markdown);
         self::assertStringContainsString('| Fails on purpose | `CalculatorTest::test_fails` | ❌ failed |', $markdown);
         self::assertStringContainsString('❌ error', $markdown);
         self::assertStringContainsString('⚠️ skipped', $markdown);
@@ -149,6 +149,8 @@ final class TestEvidenceCommandTest extends TestCase
         self::assertStringContainsString('Failed asserting that 2 is identical to 1.', $markdown);
         self::assertStringContainsString('RuntimeException: Boom', $markdown);
         self::assertStringContainsString('Not today', $markdown);
+        self::assertSame(1, substr_count($markdown, '--- Expected'), 'The assertion diff must be recorded once.');
+        self::assertStringContainsString("-    1 => 'two'", $markdown);
     }
 
     public function test_group_without_tests_exits_with_two(): void

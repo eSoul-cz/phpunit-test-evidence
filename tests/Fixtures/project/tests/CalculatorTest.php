@@ -68,6 +68,12 @@ final class CalculatorTest extends TestCase
     }
 
     #[Group('broken')]
+    public function test_fails_with_diff(): void
+    {
+        self::assertSame(['one', 'two'], ['one', 'three']);
+    }
+
+    #[Group('broken')]
     public function test_errors(): void
     {
         throw new RuntimeException('Boom');

@@ -267,7 +267,7 @@ final class MarkdownRenderer
         foreach (explode("\n", $record->details ?? '') as $line) {
             if (str_starts_with($line, '@@')) {
                 $inDiff = true;
-            } elseif (!$inDiff) {
+            } elseif (!$inDiff || str_starts_with($line, '---') || str_starts_with($line, '+++')) {
                 continue;
             } elseif ($missing === null && str_starts_with($line, '-')) {
                 $missing = $this->diffLine($line);
