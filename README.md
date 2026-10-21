@@ -49,7 +49,7 @@ vendor/bin/test-evidence ticket-42 --baseline=main --output=evidence.md
 
 `--baseline=<git ref>` runs the same tests again against the application code at that ref, typically the commit before the fix. It uses a temporary `git worktree` that receives the test files of the evaluated commit, so the comparison shows which tests only pass because of the change.
 
-PHPUnit's console output goes to STDERR, and the report goes to STDOUT or `--output`.
+PHPUnit's console output goes to STDERR. The report goes to STDOUT, or to `--output` (or the configured `output`), and the command then prints the path it wrote.
 
 ### Example
 
@@ -120,7 +120,7 @@ The re-run filters are anchored regular expressions on the fully qualified test 
 | `--ticket-url=<template>` | none | Ticket link; `{id}` and `{group}` are replaced |
 | `--title=<text>` | `Test evidence: <group>` | Report title |
 | `--format=markdown\|json` | `markdown` | Output format |
-| `--output=<file>` | STDOUT | Report file |
+| `--output=<file>` | STDOUT | Report file; `{group}` is replaced with the group in filename-safe characters. A relative path is relative to the project, missing directories are created. `-` prints to STDOUT, overriding a configured `output` |
 | `-- <arguments>` | | Passed on to PHPUnit, e.g. `-- --testsuite Feature` |
 
 ### Project defaults
@@ -135,13 +135,14 @@ Set project-wide defaults in `composer.json`. CLI options override them. Example
             "php-ini": ["memory_limit=1G"],
             "copy": [".env"],
             "ticket-prefix": "freelo-",
-            "ticket-url": "https://app.freelo.io/task/{id}"
+            "ticket-url": "https://app.freelo.io/task/{id}",
+            "output": "docs/reports/{group}.md"
         }
     }
 }
 ```
 
-Supported keys: `vendor`, `copy`, `php-ini`, `phpunit`, `rerun`, `ticket-prefix`, `ticket-url`.
+Supported keys: `vendor`, `copy`, `php-ini`, `phpunit`, `rerun`, `ticket-prefix`, `ticket-url`, `output`.
 
 A group that matches the ticket prefix (`freelo-25268176`) links to its ticket; other groups produce a report without a link.
 
@@ -177,9 +178,14 @@ Alternatively set the `TEST_EVIDENCE_OUTPUT` environment variable and pass `--ex
 4. Run `vendor/bin/test-evidence <group> --baseline=<commit before the fix>`.
 5. Check that the tests that prove the fix fail at the baseline with the reported symptom, then paste the Markdown into the ticket. Add a short note on what the tests simulate and what they cannot prove, such as environment configuration.
 
-### Agent skill
+### Agent instructions
 
-The package ships this workflow as an agent skill in `resources/boost/skills/test-evidence/SKILL.md`. Laravel Boost picks it up automatically (`php artisan boost:install` or `boost:update`). Other setups can copy the file into their agent's skills directory.
+The package ships the workflow for coding agents, in two parts:
+
+- `resources/boost/guidelines/core.md`: a short always-on guideline. When an agent fixes or implements a ticket, it tags the tests that prove it with the ticket group and a TestDox sentence, then asks whether a report should be generated.
+- `resources/boost/skills/test-evidence/SKILL.md`: the full workflow for tagging, generating and checking a report.
+
+Laravel Boost installs both once the package is selected (`php artisan boost:install`, or `php artisan boost:update --discover` in a project that already uses Boost). Other setups can copy the files into their agent's instructions and skills.
 
 ## Limitations
 
