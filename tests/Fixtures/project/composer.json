@@ -1,0 +1,9 @@
+{
+    "name": "fixture/project",
+    "extra": {
+        "test-evidence": {
+            "ticket-prefix": "ticket-",
+            "ticket-url": "https://tickets.example/{id}"
+        }
+    }
+}

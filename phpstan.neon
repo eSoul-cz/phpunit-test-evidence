@@ -1,0 +1,9 @@
+parameters:
+	editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'
+	level: 10
+	phpVersion: 80300
+	paths:
+		- src
+		- tests/Unit
+		- tests/Integration
+	tmpDir: cache/phpstan

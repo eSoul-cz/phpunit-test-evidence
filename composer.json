@@ -1,0 +1,51 @@
+{
+  "name": "esoul-cz/phpunit-test-evidence",
+  "description": "PHPUnit extension and CLI that turn a tagged group of tests into a Markdown evidence report, optionally compared against the code before a fix.",
+  "type": "library",
+  "license": "gpl-2.0-or-later",
+  "keywords": [
+    "phpunit",
+    "testing",
+    "report",
+    "evidence",
+    "regression"
+  ],
+  "authors": [
+    {
+      "name": "Tomáš Vojík",
+      "email": "vojik@esoul.cz"
+    }
+  ],
+  "require": {
+    "php": "^8.3",
+    "ext-json": "*",
+    "phpunit/phpunit": "^12.0 || ^13.0"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2",
+    "laravel/pint": "^1.13"
+  },
+  "autoload": {
+    "psr-4": {
+      "Esoul\\TestEvidence\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "bin": [
+    "bin/test-evidence"
+  ],
+  "scripts": {
+    "phpstan": "./vendor/bin/phpstan",
+    "phpcs": "./vendor/bin/pint --test",
+    "cs": "./vendor/bin/pint --test",
+    "phpcbf": "./vendor/bin/pint",
+    "cbf": "./vendor/bin/pint",
+    "test": "./vendor/bin/phpunit"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
