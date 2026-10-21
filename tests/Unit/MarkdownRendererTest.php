@@ -49,6 +49,31 @@ final class MarkdownRendererTest extends TestCase
         self::assertStringContainsString('**0 of 1 test passed**', $markdown);
     }
 
+    public function test_baseline_reason_names_the_first_missing_and_unexpected_lines_of_a_structured_diff(): void
+    {
+        $arrayDiff = "Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n     0 => '1 GET /product 200 succeeded',\n-    1 => '2 POST /assign-hub-spot-id 204 succeeded',\n ]";
+        $replacedDiff = "Failed asserting that two strings are identical.\n--- Expected\n+++ Actual\n@@ @@\n first\n-second\n+other\n";
+        $scalarDiff = "Failed asserting that -1 is identical to 3.\n--- Expected\n+++ Actual\n@@ @@\n-3\n+-1";
+        $current = new RunResult('8.5.0', '12.5.0', [
+            $this->record('test_missing', TestOutcome::Passed),
+            $this->record('test_replaced', TestOutcome::Passed),
+            $this->record('test_scalar', TestOutcome::Passed),
+        ]);
+        $baseline = new RunResult('8.5.0', '12.5.0', [
+            $this->record('test_missing', TestOutcome::Failed, 'Failed asserting that two arrays are identical.', $arrayDiff),
+            $this->record('test_replaced', TestOutcome::Failed, 'Failed asserting that two strings are identical.', $replacedDiff),
+            $this->record('test_scalar', TestOutcome::Failed, 'Failed asserting that -1 is identical to 3.', $scalarDiff),
+        ]);
+
+        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('6f98972', '6f98972', $baseline)));
+
+        self::assertStringContainsString("| 1 | test_missing | ❌ failed | Failed asserting that two arrays are identical. Expected `1 => '2 POST /assign-hub-spot-id 204 succeeded'`, missing. |", $markdown);
+        self::assertStringContainsString('| 2 | test_replaced | ❌ failed | Failed asserting that two strings are identical. Expected `second`, got `other`. |', $markdown);
+        self::assertStringContainsString('| 3 | test_scalar | ❌ failed | Failed asserting that -1 is identical to 3. |', $markdown);
+        self::assertStringContainsString('| Without the change | `6f98972`: **3 of 3 tests do not pass** |', $markdown);
+        self::assertStringContainsString('the application code of `6f98972`;', $markdown);
+    }
+
     public function test_uncommitted_changes_are_flagged(): void
     {
         $current = new RunResult('8.5.0', '12.5.0', [$this->record('test_existing', TestOutcome::Passed)]);

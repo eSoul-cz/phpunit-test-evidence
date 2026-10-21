@@ -83,9 +83,8 @@ final class MarkdownRenderer
 
         if ($report->baseline !== null) {
             $rows[] = ['Without the change', sprintf(
-                '%s at %s: **%d of %d tests do not pass**',
-                $this->code($report->baseline->ref),
-                $this->code($report->baseline->commit ?? $report->baseline->ref),
+                '%s: **%d of %d tests do not pass**',
+                $this->baselineLabel($report->baseline, ' at '),
                 $this->notPassingAtBaseline($result, $report->baseline->result),
                 $result->count(),
             )];
@@ -134,15 +133,14 @@ final class MarkdownRenderer
                 (string) ($index + 1),
                 $record->testDox,
                 $baselineRecord === null ? 'not run' : $this->outcome($baselineRecord->outcome),
-                $baselineRecord?->message === null ? '' : $this->singleLine($this->firstLine($baselineRecord->message)),
+                $baselineRecord === null ? '' : $this->reason($baselineRecord),
             ];
         }
 
         return sprintf(
-            "## Without the change: %s\n\nThe same tests were run against the application code of %s (%s); the test files were taken from the evaluated commit. A test that does not pass here shows the behaviour that the change introduces or fixes.\n\n%s",
+            "## Without the change: %s\n\nThe same tests were run against the application code of %s; the test files were taken from the evaluated commit. A test that does not pass here shows the behaviour that the change introduces or fixes.\n\n%s",
             $this->code($baseline->ref),
-            $this->code($baseline->ref),
-            $this->code($baseline->commit ?? $baseline->ref),
+            $this->baselineLabel($baseline, ' '),
             $this->table(['#', 'Behaviour', 'Result', 'Reason'], $rows),
         );
     }
@@ -247,6 +245,71 @@ final class MarkdownRenderer
     private function firstLine(string $value): string
     {
         return explode("\n", trim($value))[0];
+    }
+
+    /**
+     * The failure message plus, for a diff of a structured value (arrays, multi-line strings), the
+     * first expected line that is missing and the first actual line that is unexpected, which
+     * usually name the behaviour that differs. Scalar diffs only repeat the message.
+     */
+    private function reason(TestRecord $record): string
+    {
+        if ($record->message === null) {
+            return '';
+        }
+
+        $reason = $this->singleLine($this->firstLine($record->message));
+        $missing = null;
+        $unexpected = null;
+        $hasContext = false;
+        $inDiff = false;
+
+        foreach (explode("\n", $record->details ?? '') as $line) {
+            if (str_starts_with($line, '@@')) {
+                $inDiff = true;
+            } elseif (!$inDiff) {
+                continue;
+            } elseif ($missing === null && str_starts_with($line, '-')) {
+                $missing = $this->diffLine($line);
+            } elseif ($unexpected === null && str_starts_with($line, '+')) {
+                $unexpected = $this->diffLine($line);
+            } elseif (str_starts_with($line, ' ')) {
+                $hasContext = true;
+            }
+        }
+
+        if (!$hasContext) {
+            return $reason;
+        }
+
+        if ($missing !== null) {
+            $reason .= ' Expected ' . $this->code($missing) . ($unexpected === null ? ', missing.' : ',');
+        }
+
+        if ($unexpected !== null) {
+            $reason .= ($missing === null ? ' Unexpected ' : ' got ') . $this->code($unexpected) . '.';
+        }
+
+        return $reason;
+    }
+
+    private function diffLine(string $line): string
+    {
+        $line = rtrim(trim(substr($line, 1)), ',');
+
+        return mb_strlen($line) > 120 ? mb_substr($line, 0, 119) . '…' : $line;
+    }
+
+    /**
+     * "main at 57ebb7e", or just the commit when the ref already is it.
+     */
+    private function baselineLabel(Baseline $baseline, string $separator): string
+    {
+        if ($baseline->commit === null || str_starts_with($baseline->commit, $baseline->ref) || str_starts_with($baseline->ref, $baseline->commit)) {
+            return $this->code($baseline->ref);
+        }
+
+        return $this->code($baseline->ref) . $separator . ($separator === ' ' ? '(' . $this->code($baseline->commit) . ')' : $this->code($baseline->commit));
     }
 
     private function code(string $value): string
