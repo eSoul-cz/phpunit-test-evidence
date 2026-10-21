@@ -44,22 +44,24 @@ final readonly class Options
           --php-ini=<key=value>     PHP ini setting for the PHPUnit process (repeatable, e.g. memory_limit=1G)
           --phpunit=<path>          PHPUnit binary (default: vendor/bin/phpunit)
           --rerun=<template>        Re-run command; {filter} is replaced (default: vendor/bin/phpunit --filter {filter})
-          --ticket-prefix=<prefix>  Group prefix stripped to get the ticket ID (e.g. freelo-)
+          --ticket-prefix=<prefix>  Group prefix stripped to get the ticket ID (e.g. ticket-)
           --ticket-url=<template>   Ticket link; {id} and {group} are replaced
           --title=<text>            Report title
           --format=markdown|json    Output format (default: markdown)
-          --output=<file>           Write the report to <file> instead of stdout
+          --output=<file>           Write the report to <file>; {group} is replaced, missing directories are
+                                    created, a relative path is relative to the project (default: stdout)
+          --output=-                Print the report to stdout, overriding a configured output
           --help                    Show this help
 
-        Defaults for every option except <group>, --baseline, --title, --format and --output can be
-        set in composer.json under "extra": {"test-evidence": {...}}, using the option names as keys.
+        Defaults for every option except <group>, --baseline, --title and --format can be set in
+        composer.json under "extra": {"test-evidence": {...}}, using the option names as keys.
         TXT;
 
     private const array SCALAR_OPTIONS = ['baseline', 'vendor', 'phpunit', 'rerun', 'ticket-prefix', 'ticket-url', 'title', 'format', 'output'];
 
     private const array LIST_OPTIONS = ['copy', 'php-ini'];
 
-    private const array CONFIGURABLE_OPTIONS = ['vendor', 'phpunit', 'rerun', 'ticket-prefix', 'ticket-url', 'copy', 'php-ini'];
+    private const array CONFIGURABLE_OPTIONS = ['vendor', 'phpunit', 'rerun', 'ticket-prefix', 'ticket-url', 'copy', 'php-ini', 'output'];
 
     /**
      * @param  list<string>  $copyPaths
@@ -166,7 +168,7 @@ final readonly class Options
             ticketUrl: self::stringValue($values, 'ticket-url'),
             title: self::stringValue($values, 'title'),
             format: $format,
-            output: self::stringValue($values, 'output'),
+            output: self::outputPath(self::stringValue($values, 'output'), $positional[0], $workingDirectory),
             phpunitArguments: $phpunitArguments,
         );
     }
@@ -202,6 +204,20 @@ final readonly class Options
         }
 
         return str_replace(['{id}', '{group}'], [rawurlencode($id), rawurlencode($this->group)], $this->ticketUrl);
+    }
+
+    /**
+     * Resolves the report path: `-` means stdout, `{group}` becomes the group in filename-safe characters.
+     */
+    private static function outputPath(?string $template, string $group, string $workingDirectory): ?string
+    {
+        if ($template === null || $template === '-') {
+            return null;
+        }
+
+        $path = str_replace('{group}', (string) preg_replace('/[^A-Za-z0-9._-]+/', '-', $group), $template);
+
+        return str_starts_with($path, '/') ? $path : $workingDirectory . '/' . $path;
     }
 
     /**

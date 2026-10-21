@@ -26,7 +26,9 @@ use function fwrite;
 
 use InvalidArgumentException;
 
+use function is_dir;
 use function is_file;
+use function mkdir;
 use function random_bytes;
 
 use RuntimeException;
@@ -123,11 +125,26 @@ final readonly class Application
 
         if ($options->output === null) {
             fwrite(STDOUT, $rendered);
-        } elseif (file_put_contents($options->output, $rendered) === false) {
-            throw new RuntimeException(sprintf('Cannot write the report to [%s].', $options->output));
+        } else {
+            $this->writeReport($options->output, $rendered);
         }
 
         return $result->isSuccessful() ? 0 : 1;
+    }
+
+    private function writeReport(string $path, string $rendered): void
+    {
+        $directory = dirname($path);
+
+        if (!is_dir($directory) && !@mkdir($directory, 0o777, true) && !is_dir($directory)) {
+            throw new RuntimeException(sprintf('Cannot create the report directory [%s].', $directory));
+        }
+
+        if (file_put_contents($path, $rendered) === false) {
+            throw new RuntimeException(sprintf('Cannot write the report to [%s].', $path));
+        }
+
+        fwrite($this->progress, sprintf("test-evidence: report written to %s\n", $path));
     }
 
     private function runBaseline(Options $options, string $workingDirectory, Git $git, RunResult $result): Baseline
