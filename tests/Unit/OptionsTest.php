@@ -97,6 +97,30 @@ final class OptionsTest extends TestCase
         self::assertNull($options->ticketLink());
     }
 
+    public function test_configured_output_names_the_report_after_the_group_inside_the_project(): void
+    {
+        $this->composerConfiguration(['output' => 'docs/reports/{group}.md']);
+
+        $options = Options::parse(['teamwork-123'], $this->directory);
+
+        self::assertSame($this->directory . '/docs/reports/teamwork-123.md', $options->output);
+    }
+
+    public function test_group_is_reduced_to_filename_safe_characters_in_the_output_path(): void
+    {
+        $options = Options::parse(['../ticket 42/x', '--output=/reports/{group}.md'], $this->directory);
+
+        self::assertSame('/reports/..-ticket-42-x.md', $options->output);
+    }
+
+    public function test_cli_output_overrides_the_configured_output_and_dash_means_stdout(): void
+    {
+        $this->composerConfiguration(['output' => 'docs/reports/{group}.md']);
+
+        self::assertSame('/tmp/evidence.md', Options::parse(['ticket-42', '--output=/tmp/evidence.md'], $this->directory)->output);
+        self::assertNull(Options::parse(['ticket-42', '--output=-'], $this->directory)->output);
+    }
+
     /**
      * @param  list<string>  $arguments
      */

@@ -162,6 +162,19 @@ final class TestEvidenceCommandTest extends TestCase
         self::assertStringContainsString('No tests ran for group [no-such-group].', $this->progressOutput());
     }
 
+    public function test_relative_output_is_written_inside_the_project_creating_missing_directories(): void
+    {
+        $application = new Application($this->progress, new DateTimeImmutable('2026-10-21 12:00:00+02:00'));
+
+        $exitCode = $application->run(['ticket-42', '--output=docs/reports/{group}.md'], $this->project);
+
+        $report = $this->project . '/docs/reports/ticket-42.md';
+        self::assertSame(0, $exitCode, $this->progressOutput());
+        self::assertFileExists($report);
+        self::assertStringStartsWith('# Test evidence: ticket-42', (string) file_get_contents($report));
+        self::assertStringContainsString('test-evidence: report written to ' . $report, $this->progressOutput());
+    }
+
     /**
      * @param  list<string>  $arguments
      * @return array{int, string}
