@@ -1,6 +1,9 @@
 @Library(['dockerHelpers', 'testing']) _
 pipeline {
 	agent any
+	options {
+		timeout(time: 20, unit: 'MINUTES')
+	}
 
 	environment {
 		// Docker repositories
@@ -8,9 +11,6 @@ pipeline {
 
 		// Images
 		PHP_TEST_IMAGE = 'php:8.5'
-
-		// Workspace directory inside container
-		CONTAINER_WORKSPACE = '/workspace'
 	}
 
 	stages {
@@ -29,31 +29,16 @@ pipeline {
 
 		stage('Pull Test Image') {
 			steps {
-				sh "docker pull ${TEST_REGISTRY}/${PHP_TEST_IMAGE}"
-			}
-		}
-
-		stage('Prepare Dependencies') {
-			steps {
-				script {
-					// Need to update to refresh the lock file as it's not committed to the repository
-					sh """
-						docker run --rm \
-							-v \$(pwd):${CONTAINER_WORKSPACE} \
-							-w ${CONTAINER_WORKSPACE} \
-							${TEST_REGISTRY}/${PHP_TEST_IMAGE} \
-							sh -c 'composer update && composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader'
-					"""
-				}
+				sh "docker pull ${TEST_REGISTRY}/${PHP_TEST_IMAGE} || true"
 			}
 		}
 
 		stage('Testing') {
 			steps {
 				script {
+					// The lock file is not committed, so the install resolves the newest supported versions (PHPUnit 13).
 					fullPhpTest(
 						image: "${TEST_REGISTRY}/${PHP_TEST_IMAGE}",
-						runInstall: true,
 						phpstanCommand: './vendor/bin/phpstan analyse --memory-limit=1G',
 						csCommand: './vendor/bin/pint --test',
 						testCommand: './vendor/bin/phpunit'
@@ -64,14 +49,13 @@ pipeline {
 
 		stage('Testing with PHPUnit 12') {
 			steps {
-				// The package supports PHPUnit ^12 || ^13; the stage above runs the newest.
-				sh """
-					docker run --rm \
-						-v \$(pwd):${CONTAINER_WORKSPACE} \
-						-w ${CONTAINER_WORKSPACE} \
-						${TEST_REGISTRY}/${PHP_TEST_IMAGE} \
-						sh -c 'git config --global --add safe.directory ${CONTAINER_WORKSPACE} && composer update --no-interaction --no-progress -W --with "phpunit/phpunit:^12.0" && ./vendor/bin/phpunit'
-				"""
+				script {
+					// The package supports PHPUnit ^12 || ^13. Runs after the main suite because it rewrites vendor/.
+					runCommandInTest(
+						image: "${TEST_REGISTRY}/${PHP_TEST_IMAGE}",
+						command: 'composer update --no-interaction --no-progress --with-all-dependencies --with "phpunit/phpunit:^12.0" && ./vendor/bin/phpunit'
+					)
+				}
 			}
 		}
 
@@ -79,6 +63,13 @@ pipeline {
 			steps {
 				build job: 'internal/eSoul Internal/packages-repository/master', wait: false
 			}
+		}
+	}
+
+	post {
+		always {
+			sh 'sudo /usr/local/sbin/jenkins-clean-workspace-perms "$WORKSPACE" || true'
+			cleanWs()
 		}
 	}
 }
