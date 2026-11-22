@@ -24,7 +24,7 @@ final class MarkdownRendererTest extends TestCase
             $this->record('test_existing', TestOutcome::Passed),
         ]);
 
-        $markdown = new MarkdownRenderer()->render($this->report($current, new Baseline('main', 'abc1234', $baseline)));
+        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('main', 'abc1234', $baseline)));
 
         self::assertStringContainsString('| Without the change | `main` at `abc1234`: **1 of 2 tests do not pass** |', $markdown);
         self::assertStringContainsString('| 2 | test_new | not run |  |', $markdown);
@@ -39,7 +39,7 @@ final class MarkdownRendererTest extends TestCase
             $this->record('test_broken', TestOutcome::Failed, "First | line\nsecond line"),
         ]);
 
-        $markdown = new MarkdownRenderer()->render($this->report($current, new Baseline('main', null, $baseline)));
+        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('main', null, $baseline)));
 
         self::assertStringContainsString('| 1 | test_broken | ❌ failed | First \| line |', $markdown);
         self::assertStringContainsString("line 40\n…\n```", $markdown);
@@ -64,7 +64,7 @@ final class MarkdownRendererTest extends TestCase
             $this->record('test_scalar', TestOutcome::Failed, 'Failed asserting that -1 is identical to 3.', $scalarDiff),
         ]);
 
-        $markdown = new MarkdownRenderer()->render($this->report($current, new Baseline('6f98972', '6f98972', $baseline)));
+        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('6f98972', '6f98972', $baseline)));
 
         self::assertStringContainsString("| 1 | test_missing | ❌ failed | Failed asserting that two arrays are identical. Expected `1 => '2 POST /assign-hub-spot-id 204 succeeded'`, missing. |", $markdown);
         self::assertStringContainsString('| 2 | test_replaced | ❌ failed | Failed asserting that two strings are identical. Expected `second`, got `other`. |', $markdown);
@@ -76,7 +76,7 @@ final class MarkdownRendererTest extends TestCase
     public function test_uncommitted_changes_are_flagged(): void {
         $current = new RunResult('8.5.0', '12.5.0', [$this->record('test_existing', TestOutcome::Passed)]);
 
-        $markdown = new MarkdownRenderer()->render(new Report(
+        $markdown = (new MarkdownRenderer())->render(new Report(
             group: 'ticket-1',
             result: $current,
             generatedAt: new DateTimeImmutable('2026-10-21 12:00:00+00:00'),

@@ -34,19 +34,19 @@ final class CalculatorTest extends TestCase
     #[DataProvider('sums')]
     #[TestDox('Adds $a and $b to $expected')]
     public function test_adds(int $a, int $b, int $expected): void {
-        self::assertSame($expected, new Calculator()->add($a, $b));
+        self::assertSame($expected, (new Calculator())->add($a, $b));
     }
 
     #[Group('ticket-42')]
     #[DataProvider('doubles')]
     public function test_adds_twice(int $a): void {
-        self::assertSame(2 * $a, new Calculator()->add($a, $a));
+        self::assertSame(2 * $a, (new Calculator())->add($a, $a));
     }
 
     #[Group('ticket-42')]
     #[TestDox('Returns an integer for "quoted" | piped input')]
     public function test_returns_integer(): void {
-        self::assertIsInt(new Calculator()->add(1, 1));
+        self::assertIsInt((new Calculator())->add(1, 1));
     }
 
     #[Group('unrelated')]
