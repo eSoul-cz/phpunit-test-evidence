@@ -14,10 +14,10 @@ final readonly class TestErroredSubscriber implements ErroredSubscriber
 {
     public function __construct(
         private ResultCollector $collector,
-    ) {}
+    ) {
+    }
 
-    public function notify(Errored $event): void
-    {
+    public function notify(Errored $event): void {
         $this->collector->errored($event->test(), $event->throwable());
     }
 }

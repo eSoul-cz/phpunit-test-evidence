@@ -14,10 +14,10 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
 {
     public function __construct(
         private ResultCollector $collector,
-    ) {}
+    ) {
+    }
 
-    public function notify(Finished $event): void
-    {
+    public function notify(Finished $event): void {
         $this->collector->finished($event->test(), $event->telemetryInfo()->time(), $event->numberOfAssertionsPerformed());
     }
 }

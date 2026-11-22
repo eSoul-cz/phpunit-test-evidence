@@ -4,17 +4,9 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Collector;
 
-use function dirname;
-
 use Esoul\TestEvidence\RunResult;
 use Esoul\TestEvidence\TestOutcome;
 use Esoul\TestEvidence\TestRecord;
-
-use function file_put_contents;
-use function is_dir;
-use function json_encode;
-use function mkdir;
-
 use PHPUnit\Event\Code\Test;
 use PHPUnit\Event\Code\TestMethod;
 use PHPUnit\Event\Code\Throwable;
@@ -23,6 +15,11 @@ use PHPUnit\Metadata\Group;
 use PHPUnit\Runner\Version;
 use RuntimeException;
 
+use function dirname;
+use function file_put_contents;
+use function is_dir;
+use function json_encode;
+use function mkdir;
 use function sprintf;
 use function trim;
 
@@ -45,11 +42,11 @@ final class ResultCollector
 
     public function __construct(
         private readonly string $outputPath,
-    ) {}
+    ) {
+    }
 
-    public function prepared(Test $test, HRTime $time): void
-    {
-        if (!$test instanceof TestMethod) {
+    public function prepared(Test $test, HRTime $time): void {
+        if ( ! $test instanceof TestMethod) {
             return;
         }
 
@@ -62,17 +59,15 @@ final class ResultCollector
         ];
     }
 
-    public function failed(Test $test, Throwable $throwable, ?string $diff): void
-    {
+    public function failed(Test $test, Throwable $throwable, ?string $diff): void {
         $description = $throwable->description();
         // PHPUnit usually includes the comparison diff in the description already.
-        $details = trim($diff !== null && $diff !== '' && !str_contains($description, trim($diff)) ? $description . "\n" . $diff : $description);
+        $details = trim($diff !== null && $diff !== '' && ! str_contains($description, trim($diff)) ? $description . "\n" . $diff : $description);
 
         $this->outcome($test, TestOutcome::Failed, $throwable->message(), $details);
     }
 
-    public function errored(Test $test, Throwable $throwable): void
-    {
+    public function errored(Test $test, Throwable $throwable): void {
         $this->outcome(
             $test,
             TestOutcome::Errored,
@@ -81,19 +76,16 @@ final class ResultCollector
         );
     }
 
-    public function skipped(Test $test, string $message): void
-    {
+    public function skipped(Test $test, string $message): void {
         $this->outcome($test, TestOutcome::Skipped, $message, null);
     }
 
-    public function incomplete(Test $test, Throwable $throwable): void
-    {
+    public function incomplete(Test $test, Throwable $throwable): void {
         $this->outcome($test, TestOutcome::Incomplete, $throwable->message(), null);
     }
 
-    public function finished(Test $test, HRTime $time, int $assertions): void
-    {
-        if (!$test instanceof TestMethod || !isset($this->pending[$test->id()])) {
+    public function finished(Test $test, HRTime $time, int $assertions): void {
+        if ( ! $test instanceof TestMethod || ! isset($this->pending[$test->id()])) {
             return;
         }
 
@@ -104,15 +96,14 @@ final class ResultCollector
      * Records tests that never reached the finished event (e.g. an error before the test ran) and
      * writes all records to the output file.
      */
-    public function executionFinished(): void
-    {
+    public function executionFinished(): void {
         foreach ($this->pending as $id => $pending) {
             $this->record($id, null, 0);
         }
 
         $directory = dirname($this->outputPath);
 
-        if (!is_dir($directory) && !@mkdir($directory, 0o777, true) && !is_dir($directory)) {
+        if ( ! is_dir($directory) && ! @mkdir($directory, 0o777, true) && ! is_dir($directory)) {
             throw new RuntimeException(sprintf('Cannot create directory [%s] for test evidence results.', $directory));
         }
 
@@ -123,9 +114,8 @@ final class ResultCollector
         }
     }
 
-    private function outcome(Test $test, TestOutcome $outcome, string $message, ?string $details): void
-    {
-        if (!$test instanceof TestMethod) {
+    private function outcome(Test $test, TestOutcome $outcome, string $message, ?string $details): void {
+        if ( ! $test instanceof TestMethod) {
             return;
         }
 
@@ -147,8 +137,7 @@ final class ResultCollector
         $this->pending[$test->id()]['details'] = $details;
     }
 
-    private function record(string $id, ?HRTime $finishedAt, int $assertions): void
-    {
+    private function record(string $id, ?HRTime $finishedAt, int $assertions): void {
         $pending = $this->pending[$id];
         $test = $pending['test'];
         unset($this->pending[$id]);

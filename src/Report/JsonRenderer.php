@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Report;
 
-use function array_map;
-
 use Esoul\TestEvidence\TestRecord;
 
+use function array_map;
 use function json_encode;
 
 final class JsonRenderer
 {
-    public function render(Report $report): string
-    {
+    public function render(Report $report): string {
         $records = array_map(static fn (TestRecord $record): array => [
             ...$record->toArray(),
             'id' => $record->id(),

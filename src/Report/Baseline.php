@@ -16,5 +16,6 @@ final readonly class Baseline
         public string $ref,
         public ?string $commit,
         public RunResult $result,
-    ) {}
+    ) {
+    }
 }

@@ -6,22 +6,18 @@ namespace Tests\Integration;
 
 use DateTimeImmutable;
 use Esoul\TestEvidence\Cli\Application;
-
-use function exec;
-use function file_get_contents;
-use function file_put_contents;
-
 use FilesystemIterator;
-
-use function implode;
-use function is_string;
-use function json_decode;
-
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
+use function exec;
+use function file_get_contents;
+use function file_put_contents;
+use function implode;
+use function is_string;
+use function json_decode;
 use function sprintf;
 
 /**
@@ -37,8 +33,7 @@ final class TestEvidenceCommandTest extends TestCase
      */
     private mixed $progress;
 
-    protected function setUp(): void
-    {
+    protected function setUp(): void {
         $this->project = sys_get_temp_dir() . '/test-evidence-fixture-' . bin2hex(random_bytes(6));
         $this->copyDirectory(dirname(__DIR__) . '/Fixtures/project', $this->project);
         symlink(dirname(__DIR__, 2) . '/vendor', $this->project . '/vendor');
@@ -48,13 +43,11 @@ final class TestEvidenceCommandTest extends TestCase
         $this->progress = $progress;
     }
 
-    protected function tearDown(): void
-    {
+    protected function tearDown(): void {
         $this->removeDirectory($this->project);
     }
 
-    public function test_markdown_report_lists_only_the_group_with_resolved_testdox_and_ticket_link(): void
-    {
+    public function test_markdown_report_lists_only_the_group_with_resolved_testdox_and_ticket_link(): void {
         [$exitCode, $markdown] = $this->runCommand(['ticket-42']);
 
         self::assertSame(0, $exitCode, $this->progressOutput());
@@ -71,8 +64,7 @@ final class TestEvidenceCommandTest extends TestCase
         self::assertStringNotContainsString('Without the change', $markdown);
     }
 
-    public function test_every_rerun_command_runs_exactly_its_own_test(): void
-    {
+    public function test_every_rerun_command_runs_exactly_its_own_test(): void {
         [$exitCode, $json] = $this->runCommand(['ticket-42', '--format=json']);
 
         self::assertSame(0, $exitCode, $this->progressOutput());
@@ -95,8 +87,7 @@ final class TestEvidenceCommandTest extends TestCase
         }
     }
 
-    public function test_baseline_shows_which_tests_do_not_pass_without_the_change(): void
-    {
+    public function test_baseline_shows_which_tests_do_not_pass_without_the_change(): void {
         $calculator = $this->project . '/src/Calculator.php';
         $fixed = (string) file_get_contents($calculator);
         $tests = (string) file_get_contents($this->project . '/tests/CalculatorTest.php');
@@ -136,8 +127,7 @@ final class TestEvidenceCommandTest extends TestCase
         self::assertStringContainsString('| 1 | Adds 1 and 2 to 3 | ❌ failed | Failed asserting that -1 is identical to 3. |', $markdown);
     }
 
-    public function test_failing_group_exits_with_one_and_reports_the_failures(): void
-    {
+    public function test_failing_group_exits_with_one_and_reports_the_failures(): void {
         [$exitCode, $markdown] = $this->runCommand(['broken']);
 
         self::assertSame(1, $exitCode);
@@ -153,8 +143,7 @@ final class TestEvidenceCommandTest extends TestCase
         self::assertStringContainsString("-    1 => 'two'", $markdown);
     }
 
-    public function test_group_without_tests_exits_with_two(): void
-    {
+    public function test_group_without_tests_exits_with_two(): void {
         [$exitCode, $output] = $this->runCommand(['no-such-group']);
 
         self::assertSame(2, $exitCode);
@@ -162,8 +151,7 @@ final class TestEvidenceCommandTest extends TestCase
         self::assertStringContainsString('No tests ran for group [no-such-group].', $this->progressOutput());
     }
 
-    public function test_relative_output_is_written_inside_the_project_creating_missing_directories(): void
-    {
+    public function test_relative_output_is_written_inside_the_project_creating_missing_directories(): void {
         $application = new Application($this->progress, new DateTimeImmutable('2026-10-21 12:00:00+02:00'));
 
         $exitCode = $application->run(['ticket-42', '--output=docs/reports/{group}.md'], $this->project);
@@ -179,8 +167,7 @@ final class TestEvidenceCommandTest extends TestCase
      * @param  list<string>  $arguments
      * @return array{int, string}
      */
-    private function runCommand(array $arguments): array
-    {
+    private function runCommand(array $arguments): array {
         $output = $this->project . '/report-' . bin2hex(random_bytes(4));
         $application = new Application($this->progress, new DateTimeImmutable('2026-10-21 12:00:00+02:00'));
 
@@ -198,8 +185,7 @@ final class TestEvidenceCommandTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function decode(string $json): array
-    {
+    private function decode(string $json): array {
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($data);
 
@@ -210,8 +196,7 @@ final class TestEvidenceCommandTest extends TestCase
     /**
      * @return array<string, string>
      */
-    private function outcomes(mixed $run): array
-    {
+    private function outcomes(mixed $run): array {
         self::assertIsArray($run);
         self::assertIsArray($run['records']);
         $outcomes = [];
@@ -237,8 +222,7 @@ final class TestEvidenceCommandTest extends TestCase
         return $outcomes;
     }
 
-    private function git(string ...$arguments): string
-    {
+    private function git(string ...$arguments): string {
         $command = ['git', '-c', 'user.name=Test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false', ...$arguments];
         $output = [];
         exec(sprintf('cd %s && %s 2>&1', escapeshellarg($this->project), implode(' ', array_map(escapeshellarg(...), $command))), $output, $exitCode);
@@ -247,15 +231,13 @@ final class TestEvidenceCommandTest extends TestCase
         return trim(implode("\n", $output));
     }
 
-    private function progressOutput(): string
-    {
+    private function progressOutput(): string {
         rewind($this->progress);
 
         return (string) stream_get_contents($this->progress);
     }
 
-    private function copyDirectory(string $source, string $target): void
-    {
+    private function copyDirectory(string $source, string $target): void {
         mkdir($target, 0o777, true);
 
         $items = new RecursiveIteratorIterator(
@@ -270,9 +252,8 @@ final class TestEvidenceCommandTest extends TestCase
         }
     }
 
-    private function removeDirectory(string $directory): void
-    {
-        if (!is_dir($directory)) {
+    private function removeDirectory(string $directory): void {
+        if ( ! is_dir($directory)) {
             return;
         }
 
@@ -283,7 +264,7 @@ final class TestEvidenceCommandTest extends TestCase
 
         /** @var SplFileInfo $item */
         foreach ($items as $item) {
-            $item->isDir() && !$item->isLink() ? rmdir($item->getPathname()) : unlink($item->getPathname());
+            $item->isDir() && ! $item->isLink() ? rmdir($item->getPathname()) : unlink($item->getPathname());
         }
 
         rmdir($directory);

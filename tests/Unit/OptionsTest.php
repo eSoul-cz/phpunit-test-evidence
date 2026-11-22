@@ -13,14 +13,12 @@ final class OptionsTest extends TestCase
 {
     private string $directory;
 
-    protected function setUp(): void
-    {
+    protected function setUp(): void {
         $this->directory = sys_get_temp_dir() . '/test-evidence-options-' . bin2hex(random_bytes(6));
         mkdir($this->directory);
     }
 
-    protected function tearDown(): void
-    {
+    protected function tearDown(): void {
         if (is_file($this->directory . '/composer.json')) {
             unlink($this->directory . '/composer.json');
         }
@@ -31,8 +29,7 @@ final class OptionsTest extends TestCase
     /**
      * @return array<string, array{list<string>, string}>
      */
-    public static function invalidArguments(): array
-    {
+    public static function invalidArguments(): array {
         return [
             'missing group' => [[], 'Expected exactly one test group.'],
             'two groups' => [['a', 'b'], 'Expected exactly one test group.'],
@@ -43,8 +40,7 @@ final class OptionsTest extends TestCase
         ];
     }
 
-    public function test_defaults_without_composer_configuration(): void
-    {
+    public function test_defaults_without_composer_configuration(): void {
         $options = Options::parse(['ticket-42'], $this->directory);
 
         self::assertSame('ticket-42', $options->group);
@@ -57,8 +53,7 @@ final class OptionsTest extends TestCase
         self::assertNull($options->ticketId());
     }
 
-    public function test_composer_configuration_provides_defaults_that_cli_options_override(): void
-    {
+    public function test_composer_configuration_provides_defaults_that_cli_options_override(): void {
         $this->composerConfiguration([
             'rerun' => 'php artisan test --filter {filter}',
             'php-ini' => ['memory_limit=1G'],
@@ -79,16 +74,14 @@ final class OptionsTest extends TestCase
         self::assertSame('https://app.freelo.io/task/123', $options->ticketLink());
     }
 
-    public function test_arguments_after_double_dash_go_to_phpunit(): void
-    {
+    public function test_arguments_after_double_dash_go_to_phpunit(): void {
         $options = Options::parse(['ticket-42', '--', '--testsuite', 'Feature', '--title=not-ours'], $this->directory);
 
         self::assertSame(['--testsuite', 'Feature', '--title=not-ours'], $options->phpunitArguments);
         self::assertNull($options->title);
     }
 
-    public function test_group_without_the_ticket_prefix_has_no_ticket(): void
-    {
+    public function test_group_without_the_ticket_prefix_has_no_ticket(): void {
         $this->composerConfiguration(['ticket-prefix' => 'freelo-', 'ticket-url' => 'https://example.test/{id}']);
 
         $options = Options::parse(['regression'], $this->directory);
@@ -97,8 +90,7 @@ final class OptionsTest extends TestCase
         self::assertNull($options->ticketLink());
     }
 
-    public function test_configured_output_names_the_report_after_the_group_inside_the_project(): void
-    {
+    public function test_configured_output_names_the_report_after_the_group_inside_the_project(): void {
         $this->composerConfiguration(['output' => 'docs/reports/{group}.md']);
 
         $options = Options::parse(['teamwork-123'], $this->directory);
@@ -106,15 +98,13 @@ final class OptionsTest extends TestCase
         self::assertSame($this->directory . '/docs/reports/teamwork-123.md', $options->output);
     }
 
-    public function test_group_is_reduced_to_filename_safe_characters_in_the_output_path(): void
-    {
+    public function test_group_is_reduced_to_filename_safe_characters_in_the_output_path(): void {
         $options = Options::parse(['../ticket 42/x', '--output=/reports/{group}.md'], $this->directory);
 
         self::assertSame('/reports/..-ticket-42-x.md', $options->output);
     }
 
-    public function test_cli_output_overrides_the_configured_output_and_dash_means_stdout(): void
-    {
+    public function test_cli_output_overrides_the_configured_output_and_dash_means_stdout(): void {
         $this->composerConfiguration(['output' => 'docs/reports/{group}.md']);
 
         self::assertSame('/tmp/evidence.md', Options::parse(['ticket-42', '--output=/tmp/evidence.md'], $this->directory)->output);
@@ -125,16 +115,14 @@ final class OptionsTest extends TestCase
      * @param  list<string>  $arguments
      */
     #[DataProvider('invalidArguments')]
-    public function test_invalid_arguments_are_rejected(array $arguments, string $message): void
-    {
+    public function test_invalid_arguments_are_rejected(array $arguments, string $message): void {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 
         Options::parse($arguments, $this->directory);
     }
 
-    public function test_unknown_composer_configuration_key_is_rejected(): void
-    {
+    public function test_unknown_composer_configuration_key_is_rejected(): void {
         $this->composerConfiguration(['baseline' => 'HEAD~1']);
 
         $this->expectException(InvalidArgumentException::class);
@@ -146,8 +134,7 @@ final class OptionsTest extends TestCase
     /**
      * @param  array<string, mixed>  $configuration
      */
-    private function composerConfiguration(array $configuration): void
-    {
+    private function composerConfiguration(array $configuration): void {
         file_put_contents(
             $this->directory . '/composer.json',
             json_encode(['extra' => ['test-evidence' => $configuration]], JSON_THROW_ON_ERROR),

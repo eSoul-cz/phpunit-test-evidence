@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Cli;
 
+use RuntimeException;
+
 use function getenv;
 use function implode;
 use function is_resource;
 use function proc_close;
 use function proc_open;
-
-use RuntimeException;
-
 use function sprintf;
 use function stream_get_contents;
 use function trim;
@@ -31,8 +30,7 @@ final readonly class ProcessRunner
     /**
      * @param  resource|null  $progress  receives the output of passthru commands (default: STDERR)
      */
-    public function __construct(mixed $progress = null)
-    {
+    public function __construct(mixed $progress = null) {
         $this->progress = $progress ?? STDERR;
     }
 
@@ -42,8 +40,7 @@ final readonly class ProcessRunner
      * @param  list<string>  $command
      * @param  array<string, string>  $environment  added to the current environment
      */
-    public function passthru(array $command, string $workingDirectory, array $environment = []): int
-    {
+    public function passthru(array $command, string $workingDirectory, array $environment = []): int {
         $process = proc_open(
             $command,
             [0 => ['file', '/dev/null', 'r'], 1 => $this->progress, 2 => $this->progress],
@@ -52,7 +49,7 @@ final readonly class ProcessRunner
             [...getenv(), ...$environment],
         );
 
-        if (!is_resource($process)) {
+        if ( ! is_resource($process)) {
             throw new RuntimeException(sprintf('Cannot start [%s].', implode(' ', $command)));
         }
 
@@ -66,8 +63,7 @@ final readonly class ProcessRunner
      *
      * @throws RuntimeException when the command fails
      */
-    public function capture(array $command, string $workingDirectory): string
-    {
+    public function capture(array $command, string $workingDirectory): string {
         $process = proc_open(
             $command,
             [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
@@ -75,7 +71,7 @@ final readonly class ProcessRunner
             $workingDirectory,
         );
 
-        if (!is_resource($process)) {
+        if ( ! is_resource($process)) {
             throw new RuntimeException(sprintf('Cannot start [%s].', implode(' ', $command)));
         }
 

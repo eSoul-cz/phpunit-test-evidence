@@ -12,14 +12,13 @@ use Esoul\TestEvidence\Collector\TestMarkedIncompleteSubscriber;
 use Esoul\TestEvidence\Collector\TestPreparedSubscriber;
 use Esoul\TestEvidence\Collector\TestRunnerExecutionFinishedSubscriber;
 use Esoul\TestEvidence\Collector\TestSkippedSubscriber;
-
-use function getenv;
-use function is_string;
-
 use PHPUnit\Runner\Extension\Extension as PHPUnitExtension;
 use PHPUnit\Runner\Extension\Facade;
 use PHPUnit\Runner\Extension\ParameterCollection;
 use PHPUnit\TextUI\Configuration\Configuration;
+
+use function getenv;
+use function is_string;
 
 /**
  * Records every executed test (class, method, data set, TestDox, groups, outcome, duration) to a
@@ -31,11 +30,10 @@ final class Extension implements PHPUnitExtension
 {
     public const string OUTPUT_ENVIRONMENT_VARIABLE = 'TEST_EVIDENCE_OUTPUT';
 
-    public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
-    {
+    public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void {
         $output = $parameters->has('output') ? $parameters->get('output') : getenv(self::OUTPUT_ENVIRONMENT_VARIABLE);
 
-        if (!is_string($output) || $output === '') {
+        if ( ! is_string($output) || $output === '') {
             return;
         }
 

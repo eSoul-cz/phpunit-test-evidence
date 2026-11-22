@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence;
 
+use InvalidArgumentException;
+use JsonException;
+
 use function array_map;
 use function array_sum;
 use function count;
 use function file_get_contents;
-
-use InvalidArgumentException;
-
 use function is_array;
 use function is_string;
 use function json_decode;
-
-use JsonException;
-
 use function sprintf;
 
 /**
@@ -31,13 +28,13 @@ final readonly class RunResult
         public string $phpVersion,
         public string $phpunitVersion,
         public array $records,
-    ) {}
+    ) {
+    }
 
-    public static function fromJsonFile(string $path): self
-    {
+    public static function fromJsonFile(string $path): self {
         $contents = @file_get_contents($path);
 
-        if (!is_string($contents)) {
+        if ( ! is_string($contents)) {
             throw new InvalidArgumentException(sprintf('Cannot read test evidence results from [%s].', $path));
         }
 
@@ -47,14 +44,14 @@ final readonly class RunResult
             throw new InvalidArgumentException(sprintf('Invalid test evidence results in [%s].', $path), previous: $exception);
         }
 
-        if (!is_array($data) || !is_array($data['records'] ?? null)) {
+        if ( ! is_array($data) || ! is_array($data['records'] ?? null)) {
             throw new InvalidArgumentException(sprintf('Invalid test evidence results in [%s].', $path));
         }
 
         $records = [];
 
         foreach ($data['records'] as $record) {
-            if (!is_array($record)) {
+            if ( ! is_array($record)) {
                 throw new InvalidArgumentException(sprintf('Invalid test evidence results in [%s].', $path));
             }
 
@@ -68,28 +65,23 @@ final readonly class RunResult
         );
     }
 
-    public function count(): int
-    {
+    public function count(): int {
         return count($this->records);
     }
 
-    public function successfulCount(): int
-    {
+    public function successfulCount(): int {
         return count(array_filter($this->records, static fn (TestRecord $record): bool => $record->outcome->isSuccessful()));
     }
 
-    public function isSuccessful(): bool
-    {
+    public function isSuccessful(): bool {
         return $this->records !== [] && $this->successfulCount() === $this->count();
     }
 
-    public function assertions(): int
-    {
+    public function assertions(): int {
         return array_sum(array_map(static fn (TestRecord $record): int => $record->assertions, $this->records));
     }
 
-    public function find(string $id): ?TestRecord
-    {
+    public function find(string $id): ?TestRecord {
         foreach ($this->records as $record) {
             if ($record->id() === $id) {
                 return $record;
@@ -102,8 +94,7 @@ final readonly class RunResult
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
-    {
+    public function toArray(): array {
         return [
             'phpVersion' => $this->phpVersion,
             'phpunitVersion' => $this->phpunitVersion,

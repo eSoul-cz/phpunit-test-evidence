@@ -4,15 +4,7 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Cli;
 
-use function array_map;
-use function array_unique;
-use function array_values;
-use function bin2hex;
-
 use DateTimeImmutable;
-
-use function dirname;
-
 use Esoul\TestEvidence\Extension;
 use Esoul\TestEvidence\Report\Baseline;
 use Esoul\TestEvidence\Report\JsonRenderer;
@@ -20,24 +12,23 @@ use Esoul\TestEvidence\Report\MarkdownRenderer;
 use Esoul\TestEvidence\Report\Report;
 use Esoul\TestEvidence\RunResult;
 use Esoul\TestEvidence\TestRecord;
+use InvalidArgumentException;
+use RuntimeException;
+use Throwable;
 
+use function array_map;
+use function array_unique;
+use function array_values;
+use function bin2hex;
+use function dirname;
 use function file_put_contents;
 use function fwrite;
-
-use InvalidArgumentException;
-
 use function is_dir;
 use function is_file;
 use function mkdir;
 use function random_bytes;
-
-use RuntimeException;
-
 use function sprintf;
 use function sys_get_temp_dir;
-
-use Throwable;
-
 use function unlink;
 
 /**
@@ -70,8 +61,7 @@ final readonly class Application
     /**
      * @param  list<string>  $arguments  arguments without the script name
      */
-    public function run(array $arguments, string $workingDirectory): int
-    {
+    public function run(array $arguments, string $workingDirectory): int {
         if (Options::isHelpRequest($arguments)) {
             fwrite(STDOUT, Options::USAGE . "\n");
 
@@ -95,8 +85,7 @@ final readonly class Application
         }
     }
 
-    private function report(Options $options, string $workingDirectory): int
-    {
+    private function report(Options $options, string $workingDirectory): int {
         $git = new Git($this->processes);
         $result = $this->runGroup($options, $workingDirectory, prependExtensionAutoloader: false);
 
@@ -121,7 +110,7 @@ final readonly class Application
             baseline: $baseline,
         );
 
-        $rendered = $options->format === 'json' ? (new JsonRenderer())->render($report) : (new MarkdownRenderer())->render($report);
+        $rendered = $options->format === 'json' ? new JsonRenderer()->render($report) : new MarkdownRenderer()->render($report);
 
         if ($options->output === null) {
             fwrite(STDOUT, $rendered);
@@ -132,11 +121,10 @@ final readonly class Application
         return $result->isSuccessful() ? 0 : 1;
     }
 
-    private function writeReport(string $path, string $rendered): void
-    {
+    private function writeReport(string $path, string $rendered): void {
         $directory = dirname($path);
 
-        if (!is_dir($directory) && !@mkdir($directory, 0o777, true) && !is_dir($directory)) {
+        if ( ! is_dir($directory) && ! @mkdir($directory, 0o777, true) && ! is_dir($directory)) {
             throw new RuntimeException(sprintf('Cannot create the report directory [%s].', $directory));
         }
 
@@ -147,8 +135,7 @@ final readonly class Application
         fwrite($this->progress, sprintf("test-evidence: report written to %s\n", $path));
     }
 
-    private function runBaseline(Options $options, string $workingDirectory, Git $git, RunResult $result): Baseline
-    {
+    private function runBaseline(Options $options, string $workingDirectory, Git $git, RunResult $result): Baseline {
         $testFiles = array_values(array_unique(array_map(static fn (TestRecord $record): string => $record->file, $result->records)));
 
         fwrite($this->progress, sprintf("test-evidence: preparing baseline %s\n", $options->baseline));
@@ -176,8 +163,7 @@ final readonly class Application
      * The baseline may predate this package, so its extension is then loaded through a prepended
      * autoloader pointing at the running package instead of the baseline's vendor directory.
      */
-    private function runGroup(Options $options, string $directory, bool $prependExtensionAutoloader): RunResult
-    {
+    private function runGroup(Options $options, string $directory, bool $prependExtensionAutoloader): RunResult {
         $output = sys_get_temp_dir() . '/test-evidence-' . bin2hex(random_bytes(6)) . '.json';
         $command = [PHP_BINARY];
 
@@ -206,7 +192,7 @@ final readonly class Application
         try {
             $this->processes->passthru($command, $directory, [Extension::OUTPUT_ENVIRONMENT_VARIABLE => $output]);
 
-            if (!is_file($output)) {
+            if ( ! is_file($output)) {
                 throw new RuntimeException('PHPUnit did not produce test evidence results. Did the run abort before executing tests?');
             }
 
@@ -218,8 +204,7 @@ final readonly class Application
         }
     }
 
-    private function insideRepository(Git $git, string $directory): bool
-    {
+    private function insideRepository(Git $git, string $directory): bool {
         try {
             $git->root($directory);
 

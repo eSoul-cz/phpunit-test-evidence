@@ -14,10 +14,10 @@ final readonly class TestRunnerExecutionFinishedSubscriber implements ExecutionF
 {
     public function __construct(
         private ResultCollector $collector,
-    ) {}
+    ) {
+    }
 
-    public function notify(ExecutionFinished $event): void
-    {
+    public function notify(ExecutionFinished $event): void {
         $this->collector->executionFinished();
     }
 }

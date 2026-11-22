@@ -14,10 +14,10 @@ final readonly class TestPreparedSubscriber implements PreparedSubscriber
 {
     public function __construct(
         private ResultCollector $collector,
-    ) {}
+    ) {
+    }
 
-    public function notify(Prepared $event): void
-    {
+    public function notify(Prepared $event): void {
         $this->collector->prepared($event->test(), $event->telemetryInfo()->time());
     }
 }
