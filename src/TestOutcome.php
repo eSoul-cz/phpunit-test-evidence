@@ -12,13 +12,11 @@ enum TestOutcome: string
     case Skipped = 'skipped';
     case Incomplete = 'incomplete';
 
-    public function isSuccessful(): bool
-    {
+    public function isSuccessful(): bool {
         return $this === self::Passed;
     }
 
-    public function label(): string
-    {
+    public function label(): string {
         return match ($this) {
             self::Passed => 'passed',
             self::Failed => 'failed',

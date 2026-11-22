@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Report;
 
-use function array_slice;
-use function count;
-
 use Esoul\TestEvidence\RunResult;
 use Esoul\TestEvidence\TestOutcome;
 use Esoul\TestEvidence\TestRecord;
 
+use function array_slice;
+use function count;
 use function explode;
 use function implode;
 use function is_int;
@@ -23,8 +22,7 @@ final class MarkdownRenderer
 {
     private const int DETAIL_LINE_LIMIT = 40;
 
-    public function render(Report $report): string
-    {
+    public function render(Report $report): string {
         $sections = [
             $this->header($report),
             $this->results($report->result),
@@ -44,8 +42,7 @@ final class MarkdownRenderer
         return implode("\n\n", $sections) . "\n";
     }
 
-    private function header(Report $report): string
-    {
+    private function header(Report $report): string {
         $result = $report->result;
         $title = $report->title ?? sprintf('Test evidence: %s', $report->group);
 
@@ -93,8 +90,7 @@ final class MarkdownRenderer
         return '# ' . $title . "\n\n" . $this->table(['', ''], $rows);
     }
 
-    private function results(RunResult $result): string
-    {
+    private function results(RunResult $result): string {
         $rows = [];
 
         foreach ($result->records as $index => $record) {
@@ -110,8 +106,7 @@ final class MarkdownRenderer
         return "## Results\n\n" . $this->table(['#', 'Behaviour', 'Test', 'Result', 'Time'], $rows);
     }
 
-    private function rerunCommands(Report $report): string
-    {
+    private function rerunCommands(Report $report): string {
         $lines = [];
 
         foreach ($report->result->records as $index => $record) {
@@ -122,8 +117,7 @@ final class MarkdownRenderer
         return "## Re-run a single test\n\n```sh\n" . implode("\n", $lines) . "\n```";
     }
 
-    private function baseline(RunResult $result, Baseline $baseline): string
-    {
+    private function baseline(RunResult $result, Baseline $baseline): string {
         $rows = [];
 
         foreach ($result->records as $index => $record) {
@@ -145,8 +139,7 @@ final class MarkdownRenderer
         );
     }
 
-    private function failures(RunResult $result): ?string
-    {
+    private function failures(RunResult $result): ?string {
         $sections = [];
 
         foreach ($result->records as $index => $record) {
@@ -174,12 +167,11 @@ final class MarkdownRenderer
         return $sections === [] ? null : "## Failures\n\n" . implode("\n\n", $sections);
     }
 
-    private function notPassingAtBaseline(RunResult $result, RunResult $baseline): int
-    {
+    private function notPassingAtBaseline(RunResult $result, RunResult $baseline): int {
         $count = 0;
 
         foreach ($result->records as $record) {
-            if (!$baseline->find($record->id())?->outcome->isSuccessful()) {
+            if ( ! $baseline->find($record->id())?->outcome->isSuccessful()) {
                 $count++;
             }
         }
@@ -187,8 +179,7 @@ final class MarkdownRenderer
         return $count;
     }
 
-    private function testName(TestRecord $record): string
-    {
+    private function testName(TestRecord $record): string {
         $name = $this->code($record->shortClassName() . '::' . $record->methodName);
 
         if ($record->dataSetName === null) {
@@ -198,8 +189,7 @@ final class MarkdownRenderer
         return $name . '<br>data set ' . $this->code(is_int($record->dataSetName) ? '#' . $record->dataSetName : $record->dataSetName);
     }
 
-    private function outcome(TestOutcome $outcome): string
-    {
+    private function outcome(TestOutcome $outcome): string {
         return match ($outcome) {
             TestOutcome::Passed => '✅ ' . $outcome->label(),
             TestOutcome::Failed, TestOutcome::Errored => '❌ ' . $outcome->label(),
@@ -207,8 +197,7 @@ final class MarkdownRenderer
         };
     }
 
-    private function duration(float $seconds): string
-    {
+    private function duration(float $seconds): string {
         return $seconds < 1.0
             ? sprintf('%d ms', (int) round($seconds * 1000))
             : number_format($seconds, 2) . ' s';
@@ -218,8 +207,7 @@ final class MarkdownRenderer
      * @param  list<string>  $header
      * @param  list<list<string>>  $rows
      */
-    private function table(array $header, array $rows): string
-    {
+    private function table(array $header, array $rows): string {
         $lines = [
             '| ' . implode(' | ', $header) . ' |',
             '|' . implode('|', array_fill(0, count($header), '---')) . '|',
@@ -232,18 +220,15 @@ final class MarkdownRenderer
         return implode("\n", $lines);
     }
 
-    private function cell(string $value): string
-    {
+    private function cell(string $value): string {
         return str_replace('|', '\|', $this->singleLine($value));
     }
 
-    private function singleLine(string $value): string
-    {
+    private function singleLine(string $value): string {
         return trim(str_replace(["\r\n", "\n", "\r"], ' ', $value));
     }
 
-    private function firstLine(string $value): string
-    {
+    private function firstLine(string $value): string {
         return explode("\n", trim($value))[0];
     }
 
@@ -252,8 +237,7 @@ final class MarkdownRenderer
      * first expected line that is missing and the first actual line that is unexpected, which
      * usually name the behaviour that differs. Scalar diffs only repeat the message.
      */
-    private function reason(TestRecord $record): string
-    {
+    private function reason(TestRecord $record): string {
         if ($record->message === null) {
             return '';
         }
@@ -267,7 +251,7 @@ final class MarkdownRenderer
         foreach (explode("\n", $record->details ?? '') as $line) {
             if (str_starts_with($line, '@@')) {
                 $inDiff = true;
-            } elseif (!$inDiff || str_starts_with($line, '---') || str_starts_with($line, '+++')) {
+            } elseif ( ! $inDiff || str_starts_with($line, '---') || str_starts_with($line, '+++')) {
                 continue;
             } elseif ($missing === null && str_starts_with($line, '-')) {
                 $missing = $this->diffLine($line);
@@ -278,7 +262,7 @@ final class MarkdownRenderer
             }
         }
 
-        if (!$hasContext) {
+        if ( ! $hasContext) {
             return $reason;
         }
 
@@ -293,8 +277,7 @@ final class MarkdownRenderer
         return $reason;
     }
 
-    private function diffLine(string $line): string
-    {
+    private function diffLine(string $line): string {
         $line = rtrim(trim(substr($line, 1)), ',');
 
         return mb_strlen($line) > 120 ? mb_substr($line, 0, 119) . '…' : $line;
@@ -303,8 +286,7 @@ final class MarkdownRenderer
     /**
      * "main at 57ebb7e", or just the commit when the ref already is it.
      */
-    private function baselineLabel(Baseline $baseline, string $separator): string
-    {
+    private function baselineLabel(Baseline $baseline, string $separator): string {
         if ($baseline->commit === null || str_starts_with($baseline->commit, $baseline->ref) || str_starts_with($baseline->ref, $baseline->commit)) {
             return $this->code($baseline->ref);
         }
@@ -312,8 +294,7 @@ final class MarkdownRenderer
         return $this->code($baseline->ref) . $separator . ($separator === ' ' ? '(' . $this->code($baseline->commit) . ')' : $this->code($baseline->commit));
     }
 
-    private function code(string $value): string
-    {
+    private function code(string $value): string {
         return '`' . str_replace('`', "'", $value) . '`';
     }
 }

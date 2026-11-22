@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence;
 
-use function array_values;
-
 use InvalidArgumentException;
 
+use function array_values;
 use function is_array;
 use function is_float;
 use function is_int;
@@ -34,17 +33,17 @@ final readonly class TestRecord
         public int $assertions,
         public ?string $message = null,
         public ?string $details = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array<mixed>  $data
      */
-    public static function fromArray(array $data): self
-    {
+    public static function fromArray(array $data): self {
         $groups = $data['groups'] ?? [];
         $dataSetName = $data['dataSetName'] ?? null;
 
-        if (!is_array($groups) || !(is_int($dataSetName) || is_string($dataSetName) || $dataSetName === null)) {
+        if ( ! is_array($groups) || ! (is_int($dataSetName) || is_string($dataSetName) || $dataSetName === null)) {
             throw new InvalidArgumentException('Invalid test record.');
         }
 
@@ -66,13 +65,11 @@ final readonly class TestRecord
     /**
      * Stable identity of the test across runs, in PHPUnit's own naming.
      */
-    public function id(): string
-    {
+    public function id(): string {
         return $this->className . '::' . $this->nameWithDataSet();
     }
 
-    public function nameWithDataSet(): string
-    {
+    public function nameWithDataSet(): string {
         return match (true) {
             is_int($this->dataSetName) => sprintf('%s with data set #%d', $this->methodName, $this->dataSetName),
             is_string($this->dataSetName) => sprintf('%s with data set "%s"', $this->methodName, $this->dataSetName),
@@ -80,8 +77,7 @@ final readonly class TestRecord
         };
     }
 
-    public function shortClassName(): string
-    {
+    public function shortClassName(): string {
         $position = strrpos($this->className, '\\');
 
         return $position === false ? $this->className : substr($this->className, $position + 1);
@@ -90,8 +86,7 @@ final readonly class TestRecord
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
-    {
+    public function toArray(): array {
         return [
             'className' => $this->className,
             'methodName' => $this->methodName,
@@ -110,11 +105,10 @@ final readonly class TestRecord
     /**
      * @param  array<mixed>  $data
      */
-    private static function string(array $data, string $key): string
-    {
+    private static function string(array $data, string $key): string {
         $value = $data[$key] ?? null;
 
-        if (!is_string($value)) {
+        if ( ! is_string($value)) {
             throw new InvalidArgumentException(sprintf('Test record field [%s] must be a string.', $key));
         }
 
@@ -124,8 +118,7 @@ final readonly class TestRecord
     /**
      * @param  array<mixed>  $data
      */
-    private static function nullableString(array $data, string $key): ?string
-    {
+    private static function nullableString(array $data, string $key): ?string {
         $value = $data[$key] ?? null;
 
         return is_string($value) ? $value : null;
@@ -134,8 +127,7 @@ final readonly class TestRecord
     /**
      * @param  array<mixed>  $data
      */
-    private static function float(array $data, string $key): float
-    {
+    private static function float(array $data, string $key): float {
         $value = $data[$key] ?? null;
 
         return is_float($value) || is_int($value) ? (float) $value : 0.0;
@@ -144,8 +136,7 @@ final readonly class TestRecord
     /**
      * @param  array<mixed>  $data
      */
-    private static function int(array $data, string $key): int
-    {
+    private static function int(array $data, string $key): int {
         $value = $data[$key] ?? null;
 
         return is_int($value) ? $value : 0;

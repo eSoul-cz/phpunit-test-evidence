@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Cli;
 
+use Esoul\TestEvidence\Report\RerunCommand;
+use InvalidArgumentException;
+use JsonException;
+
 use function array_is_list;
 use function array_shift;
-
-use Esoul\TestEvidence\Report\RerunCommand;
-
 use function file_get_contents;
 use function in_array;
-
-use InvalidArgumentException;
-
 use function is_array;
 use function is_file;
 use function is_string;
 use function json_decode;
-
-use JsonException;
-
 use function sprintf;
 use function str_contains;
 use function str_starts_with;
@@ -82,15 +77,15 @@ final readonly class Options
         public string $format,
         public ?string $output,
         public array $phpunitArguments,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  list<string>  $arguments  arguments without the script name
      *
      * @throws InvalidArgumentException
      */
-    public static function parse(array $arguments, string $workingDirectory): self
-    {
+    public static function parse(array $arguments, string $workingDirectory): self {
         $values = self::configuration($workingDirectory);
         $cliLists = [];
         $positional = [];
@@ -105,7 +100,7 @@ final readonly class Options
                 break;
             }
 
-            if (!str_starts_with($argument, '--')) {
+            if ( ! str_starts_with($argument, '--')) {
                 $positional[] = $argument;
 
                 continue;
@@ -118,7 +113,7 @@ final readonly class Options
                 [$name, $value] = explode('=', $name, 2);
             }
 
-            if (!in_array($name, [...self::SCALAR_OPTIONS, ...self::LIST_OPTIONS], true)) {
+            if ( ! in_array($name, [...self::SCALAR_OPTIONS, ...self::LIST_OPTIONS], true)) {
                 throw new InvalidArgumentException(sprintf('Unknown option [--%s].', $name));
             }
 
@@ -148,11 +143,11 @@ final readonly class Options
         $vendor = self::stringValue($values, 'vendor') ?? 'copy';
         $format = self::stringValue($values, 'format') ?? 'markdown';
 
-        if (!in_array($vendor, ['copy', 'install'], true)) {
+        if ( ! in_array($vendor, ['copy', 'install'], true)) {
             throw new InvalidArgumentException('Option [--vendor] must be "copy" or "install".');
         }
 
-        if (!in_array($format, ['markdown', 'json'], true)) {
+        if ( ! in_array($format, ['markdown', 'json'], true)) {
             throw new InvalidArgumentException('Option [--format] must be "markdown" or "json".');
         }
 
@@ -176,17 +171,15 @@ final readonly class Options
     /**
      * @param  list<string>  $arguments
      */
-    public static function isHelpRequest(array $arguments): bool
-    {
+    public static function isHelpRequest(array $arguments): bool {
         return in_array('--help', $arguments, true) || in_array('-h', $arguments, true);
     }
 
     /**
      * The ticket ID is the group without the configured prefix, if it has one.
      */
-    public function ticketId(): ?string
-    {
-        if ($this->ticketPrefix === null || $this->ticketPrefix === '' || !str_starts_with($this->group, $this->ticketPrefix)) {
+    public function ticketId(): ?string {
+        if ($this->ticketPrefix === null || $this->ticketPrefix === '' || ! str_starts_with($this->group, $this->ticketPrefix)) {
             return null;
         }
 
@@ -195,8 +188,7 @@ final readonly class Options
         return $id === '' ? null : $id;
     }
 
-    public function ticketLink(): ?string
-    {
+    public function ticketLink(): ?string {
         $id = $this->ticketId();
 
         if ($this->ticketUrl === null || $id === null) {
@@ -209,8 +201,7 @@ final readonly class Options
     /**
      * Resolves the report path: `-` means stdout, `{group}` becomes the group in filename-safe characters.
      */
-    private static function outputPath(?string $template, string $group, string $workingDirectory): ?string
-    {
+    private static function outputPath(?string $template, string $group, string $workingDirectory): ?string {
         if ($template === null || $template === '-') {
             return null;
         }
@@ -223,11 +214,10 @@ final readonly class Options
     /**
      * @return array<string, mixed>
      */
-    private static function configuration(string $workingDirectory): array
-    {
+    private static function configuration(string $workingDirectory): array {
         $path = $workingDirectory . '/composer.json';
 
-        if (!is_file($path)) {
+        if ( ! is_file($path)) {
             return [];
         }
 
@@ -239,14 +229,14 @@ final readonly class Options
 
         $configuration = is_array($composer) && is_array($composer['extra'] ?? null) ? ($composer['extra']['test-evidence'] ?? []) : [];
 
-        if (!is_array($configuration)) {
+        if ( ! is_array($configuration)) {
             throw new InvalidArgumentException('composer.json "extra.test-evidence" must be an object.');
         }
 
         $values = [];
 
         foreach ($configuration as $name => $value) {
-            if (!is_string($name) || !in_array($name, self::CONFIGURABLE_OPTIONS, true)) {
+            if ( ! is_string($name) || ! in_array($name, self::CONFIGURABLE_OPTIONS, true)) {
                 throw new InvalidArgumentException(sprintf('Unknown composer.json "extra.test-evidence" key [%s].', (string) $name));
             }
 
@@ -259,11 +249,10 @@ final readonly class Options
     /**
      * @param  array<string, mixed>  $values
      */
-    private static function stringValue(array $values, string $name): ?string
-    {
+    private static function stringValue(array $values, string $name): ?string {
         $value = $values[$name] ?? null;
 
-        if ($value !== null && !is_string($value)) {
+        if ($value !== null && ! is_string($value)) {
             throw new InvalidArgumentException(sprintf('Option [%s] must be a string.', $name));
         }
 
@@ -274,22 +263,21 @@ final readonly class Options
      * @param  array<string, mixed>  $values
      * @return list<string>
      */
-    private static function listValue(array $values, string $name): array
-    {
+    private static function listValue(array $values, string $name): array {
         $value = $values[$name] ?? [];
 
         if (is_string($value)) {
             return [$value];
         }
 
-        if (!is_array($value) || !array_is_list($value)) {
+        if ( ! is_array($value) || ! array_is_list($value)) {
             throw new InvalidArgumentException(sprintf('Option [%s] must be a string or a list of strings.', $name));
         }
 
         $list = [];
 
         foreach ($value as $item) {
-            if (!is_string($item)) {
+            if ( ! is_string($item)) {
                 throw new InvalidArgumentException(sprintf('Option [%s] must be a string or a list of strings.', $name));
             }
 

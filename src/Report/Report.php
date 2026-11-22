@@ -24,5 +24,6 @@ final readonly class Report
         public ?string $branch = null,
         public bool $hasUncommittedChanges = false,
         public ?Baseline $baseline = null,
-    ) {}
+    ) {
+    }
 }

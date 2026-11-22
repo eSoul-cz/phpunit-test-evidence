@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Esoul\TestEvidence\Report;
 
-use function escapeshellarg;
-
 use Esoul\TestEvidence\TestRecord;
 
+use function escapeshellarg;
 use function preg_quote;
 use function str_replace;
 
@@ -22,14 +21,12 @@ final class RerunCommand
 {
     public const string DEFAULT_TEMPLATE = 'vendor/bin/phpunit --filter {filter}';
 
-    public static function filter(TestRecord $record): string
-    {
+    public static function filter(TestRecord $record): string {
         // preg_quote() also escapes ":", "#" and "-", which are literal here; unescaping keeps the command readable.
         return '/^' . str_replace(['\:', '\#', '\-'], [':', '#', '-'], preg_quote($record->id(), '/')) . '$/';
     }
 
-    public static function forRecord(TestRecord $record, string $template): string
-    {
+    public static function forRecord(TestRecord $record, string $template): string {
         return str_replace('{filter}', escapeshellarg(self::filter($record)), $template);
     }
 }

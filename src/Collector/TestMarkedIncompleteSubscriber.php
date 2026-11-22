@@ -14,10 +14,10 @@ final readonly class TestMarkedIncompleteSubscriber implements MarkedIncompleteS
 {
     public function __construct(
         private ResultCollector $collector,
-    ) {}
+    ) {
+    }
 
-    public function notify(MarkedIncomplete $event): void
-    {
+    public function notify(MarkedIncomplete $event): void {
         $this->collector->incomplete($event->test(), $event->throwable());
     }
 }

@@ -14,10 +14,10 @@ final readonly class TestFailedSubscriber implements FailedSubscriber
 {
     public function __construct(
         private ResultCollector $collector,
-    ) {}
+    ) {
+    }
 
-    public function notify(Failed $event): void
-    {
+    public function notify(Failed $event): void {
         $this->collector->failed(
             $event->test(),
             $event->throwable(),

@@ -15,8 +15,7 @@ final class RerunCommandTest extends TestCase
     /**
      * @return array<string, array{int|string|null}>
      */
-    public static function dataSetNames(): array
-    {
+    public static function dataSetNames(): array {
         return [
             'no data set' => [null],
             'unnamed data set' => [3],
@@ -29,8 +28,7 @@ final class RerunCommandTest extends TestCase
     }
 
     #[DataProvider('dataSetNames')]
-    public function test_filter_matches_exactly_the_recorded_test_name(int|string|null $dataSetName): void
-    {
+    public function test_filter_matches_exactly_the_recorded_test_name(int|string|null $dataSetName): void {
         $record = $this->record('test_adds', $dataSetName);
         $filter = RerunCommand::filter($record);
 
@@ -40,8 +38,7 @@ final class RerunCommandTest extends TestCase
         self::assertSame(0, preg_match($filter, $record->id() . ' extra'), 'The filter must be anchored at the end.');
     }
 
-    public function test_command_quotes_the_filter_for_the_shell(): void
-    {
+    public function test_command_quotes_the_filter_for_the_shell(): void {
         $command = RerunCommand::forRecord($this->record('test_adds', 'it\'s'), 'php artisan test --filter {filter}');
 
         self::assertSame(
@@ -50,8 +47,7 @@ final class RerunCommandTest extends TestCase
         );
     }
 
-    private function record(string $methodName, int|string|null $dataSetName): TestRecord
-    {
+    private function record(string $methodName, int|string|null $dataSetName): TestRecord {
         return new TestRecord(
             className: 'App\Tests\CalculatorTest',
             methodName: $methodName,

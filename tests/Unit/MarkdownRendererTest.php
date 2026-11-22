@@ -15,8 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 final class MarkdownRendererTest extends TestCase
 {
-    public function test_test_missing_from_the_baseline_run_is_reported_as_not_run_and_counted(): void
-    {
+    public function test_test_missing_from_the_baseline_run_is_reported_as_not_run_and_counted(): void {
         $current = new RunResult('8.5.0', '12.5.0', [
             $this->record('test_existing', TestOutcome::Passed),
             $this->record('test_new', TestOutcome::Passed),
@@ -25,14 +24,13 @@ final class MarkdownRendererTest extends TestCase
             $this->record('test_existing', TestOutcome::Passed),
         ]);
 
-        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('main', 'abc1234', $baseline)));
+        $markdown = new MarkdownRenderer()->render($this->report($current, new Baseline('main', 'abc1234', $baseline)));
 
         self::assertStringContainsString('| Without the change | `main` at `abc1234`: **1 of 2 tests do not pass** |', $markdown);
         self::assertStringContainsString('| 2 | test_new | not run |  |', $markdown);
     }
 
-    public function test_failure_details_are_truncated_and_messages_stay_on_one_table_line(): void
-    {
+    public function test_failure_details_are_truncated_and_messages_stay_on_one_table_line(): void {
         $details = implode("\n", array_map(static fn (int $line): string => 'line ' . $line, range(1, 50)));
         $current = new RunResult('8.5.0', '12.5.0', [
             $this->record('test_broken', TestOutcome::Failed, "First | line\nsecond line", $details),
@@ -41,7 +39,7 @@ final class MarkdownRendererTest extends TestCase
             $this->record('test_broken', TestOutcome::Failed, "First | line\nsecond line"),
         ]);
 
-        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('main', null, $baseline)));
+        $markdown = new MarkdownRenderer()->render($this->report($current, new Baseline('main', null, $baseline)));
 
         self::assertStringContainsString('| 1 | test_broken | ❌ failed | First \| line |', $markdown);
         self::assertStringContainsString("line 40\n…\n```", $markdown);
@@ -49,8 +47,7 @@ final class MarkdownRendererTest extends TestCase
         self::assertStringContainsString('**0 of 1 test passed**', $markdown);
     }
 
-    public function test_baseline_reason_names_the_first_missing_and_unexpected_lines_of_a_structured_diff(): void
-    {
+    public function test_baseline_reason_names_the_first_missing_and_unexpected_lines_of_a_structured_diff(): void {
         // As recorded by earlier versions: the description's diff followed by the same diff again.
         $diff = "--- Expected\n+++ Actual\n@@ @@\n     0 => '1 GET /product 200 succeeded',\n-    1 => '2 POST /assign-hub-spot-id 204 succeeded',\n ]";
         $arrayDiff = "Failed asserting that two arrays are identical.\n" . $diff . "\n" . $diff;
@@ -67,7 +64,7 @@ final class MarkdownRendererTest extends TestCase
             $this->record('test_scalar', TestOutcome::Failed, 'Failed asserting that -1 is identical to 3.', $scalarDiff),
         ]);
 
-        $markdown = (new MarkdownRenderer())->render($this->report($current, new Baseline('6f98972', '6f98972', $baseline)));
+        $markdown = new MarkdownRenderer()->render($this->report($current, new Baseline('6f98972', '6f98972', $baseline)));
 
         self::assertStringContainsString("| 1 | test_missing | ❌ failed | Failed asserting that two arrays are identical. Expected `1 => '2 POST /assign-hub-spot-id 204 succeeded'`, missing. |", $markdown);
         self::assertStringContainsString('| 2 | test_replaced | ❌ failed | Failed asserting that two strings are identical. Expected `second`, got `other`. |', $markdown);
@@ -76,11 +73,10 @@ final class MarkdownRendererTest extends TestCase
         self::assertStringContainsString('the application code of `6f98972`;', $markdown);
     }
 
-    public function test_uncommitted_changes_are_flagged(): void
-    {
+    public function test_uncommitted_changes_are_flagged(): void {
         $current = new RunResult('8.5.0', '12.5.0', [$this->record('test_existing', TestOutcome::Passed)]);
 
-        $markdown = (new MarkdownRenderer())->render(new Report(
+        $markdown = new MarkdownRenderer()->render(new Report(
             group: 'ticket-1',
             result: $current,
             generatedAt: new DateTimeImmutable('2026-10-21 12:00:00+00:00'),
@@ -93,8 +89,7 @@ final class MarkdownRendererTest extends TestCase
         self::assertStringContainsString('| Commit | `abc1234` on `main` **with uncommitted changes** |', $markdown);
     }
 
-    private function report(RunResult $result, ?Baseline $baseline): Report
-    {
+    private function report(RunResult $result, ?Baseline $baseline): Report {
         return new Report(
             group: 'ticket-1',
             result: $result,
@@ -104,8 +99,7 @@ final class MarkdownRendererTest extends TestCase
         );
     }
 
-    private function record(string $methodName, TestOutcome $outcome, ?string $message = null, ?string $details = null): TestRecord
-    {
+    private function record(string $methodName, TestOutcome $outcome, ?string $message = null, ?string $details = null): TestRecord {
         return new TestRecord(
             className: 'App\Tests\ExampleTest',
             methodName: $methodName,
