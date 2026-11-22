@@ -205,7 +205,7 @@ composer cs:fix    # fix code style violations
 
 ### CI
 
-Supported PHP versions are 8.3 and newer, with PHPUnit 12 or 13. The Jenkins pipeline (`phpPackagePipeline`) runs `composer validate --strict`, PHPStan, the code style check, PHPUnit and `composer audit` on PHP 8.5, then the tests again on PHP 8.4 and PHP 8.6 and on PHPUnit 12. A successful build of `main` triggers the Satis rebuild.
+The library supports PHP 8.3 and newer, with PHPUnit 12 or 13. Developing it needs PHP 8.4 or newer, because the dev dependencies (PHPUnit 13, the coding standard) require it. The Jenkins pipeline (`phpPackagePipeline`) runs `composer validate --strict`, PHPStan, the code style check, PHPUnit and `composer audit` on PHP 8.5, then the tests again on PHP 8.4 and PHP 8.6 and on PHPUnit 12. A successful build of `main` triggers the Satis rebuild.
 
 ## License
 
