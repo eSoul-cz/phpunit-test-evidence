@@ -110,7 +110,7 @@ final readonly class Application
             baseline: $baseline,
         );
 
-        $rendered = $options->format === 'json' ? new JsonRenderer()->render($report) : new MarkdownRenderer()->render($report);
+        $rendered = $options->format === 'json' ? (new JsonRenderer())->render($report) : (new MarkdownRenderer())->render($report);
 
         if ($options->output === null) {
             fwrite(STDOUT, $rendered);
