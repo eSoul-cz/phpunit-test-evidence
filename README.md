@@ -199,8 +199,13 @@ Laravel Boost installs both once the package is selected (`php artisan boost:ins
 composer install
 composer test      # PHPUnit
 composer phpstan   # PHPStan, level 10, analysed for PHP 8.3
-composer cs        # Pint
+composer cs        # code style check (esoul-cz/coding-standard, PHP-CS-Fixer dry run)
+composer cs:fix    # fix code style violations
 ```
+
+### CI
+
+Supported PHP versions are 8.3 and newer, with PHPUnit 12 or 13. The Jenkins pipeline (`phpPackagePipeline`) runs `composer validate --strict`, PHPStan, the code style check, PHPUnit and `composer audit` on PHP 8.5, then the tests again on PHP 8.4 and PHP 8.6 and on PHPUnit 12. A successful build of `main` triggers the Satis rebuild.
 
 ## License
 
